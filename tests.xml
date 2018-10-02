@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+  <testsuite name="github.com/defectus/glutton" tests="4" errors="0" failures="0" skip="0">
+    <testcase classname="github.com/defectus/glutton" name="TestValueFromEnvVar" time="0.00">
+
+    </testcase>
+    <testcase classname="github.com/defectus/glutton" name="TestValueFromEnvVar2" time="0.00">
+
+    </testcase>
+    <testcase classname="github.com/defectus/glutton" name="TestValueFromEnvVar3" time="0.00">
+
+    </testcase>
+    <testcase classname="github.com/defectus/glutton" name="TestValueFromEnvVar4" time="0.00">
+
+    </testcase>
+  </testsuite>
