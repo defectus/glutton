@@ -1,12 +1,36 @@
 package glutton
 
-import "github.com/gin-gonic/gin"
-import "github.com/gin-contrib/cors"
+import (
+	"log"
+	"net/http"
+	"os"
+	"os/signal"
+
+	"github.com/gin-contrib/cors"
+	"github.com/gin-gonic/gin"
+)
 
 func Run() error {
-	env := createEnvironment(createSettings(DefaultSettings))
-	go env.Server.Run()
+	env := createEnvironment(createSettings(new(Settings)))
+	if env.Settings.Debug == "true" {
+		log.Printf("current settings: %+v", env.Settings)
+	}
+	closing := make(chan struct{})
+	hookOnExit(closing)
+	go env.Server.Run(env.Settings.Host + ":" + env.Settings.Port)
+	<-closing
 	return nil
+}
+
+// hookOnExit listens for signal SIGHUP and once received it closes the provided `closing` channel.
+func hookOnExit(closing chan struct{}) {
+	go func(closing chan struct{}) {
+		signals := make(chan os.Signal, 1)
+		signal.Notify(signals, os.Kill, os.Interrupt)
+		<-signals
+		log.Println("Initiating shutdown ...")
+		close(closing)
+	}(closing)
 }
 
 func initializeRoutes(router *gin.Engine, env *Env) {
@@ -21,6 +45,22 @@ func initializeRoutes(router *gin.Engine, env *Env) {
 
 func savePayload(env *Env) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		payload, err := env.Parser.Parse(c.Request)
+		if err != nil {
 
+		}
+		err = env.Notifier.Notify(payload)
+		if err != nil {
+
+		}
+		err = env.Saver.Save(payload)
+		if err != nil {
+
+		}
+		c.Status(http.StatusOK)
 	}
+}
+
+func renderError(c *gin.Context, err error) {
+	c.JSON(http.StatusInternalServerError, map[string]interface{}{"error": err.Error(), "detail": err})
 }

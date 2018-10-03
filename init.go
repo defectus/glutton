@@ -24,6 +24,12 @@ func createEnvironment(settings *Settings) *Env {
 	env := &Env{Settings: settings}
 	env.Server = gin.Default()
 	initializeRoutes(env.Server, env)
+	env.Notifier = &NilNotifier{}
+	env.Saver = &SimpleFileSystemSaver{}
+	env.Parser = &SimpleParser{}
+	env.Notifier.Configure(env.Settings)
+	env.Saver.Configure(env.Settings)
+	env.Parser.Configure(env.Settings)
 	return env
 }
 
@@ -33,6 +39,9 @@ func valueFromEnvVar(value interface{}) error {
 		return errors.Errorf("valueFromEnvVar: only pointer type values are supported.")
 	}
 	val = val.Elem()
+	if val.Kind() != reflect.Struct {
+		return errors.Errorf("valueFromEnvVar: only struct types are supported.")
+	}
 	for i := 0; i < val.NumField(); i++ {
 		if val.Type().Field(i).Type.Kind() != reflect.String {
 			return errors.Errorf("valueFromEnvVar: only string fields are supported, not %s.", val.Type().Field(i).Type.Kind().String())
@@ -41,8 +50,10 @@ func valueFromEnvVar(value interface{}) error {
 		if len(tag) == 0 {
 			tag = val.Type().Field(i).Name
 		}
+		val.Field(i).SetString(os.Getenv(tag))
 		if len(val.Field(i).String()) == 0 {
-			val.Field(i).SetString(os.Getenv(tag))
+			// try to set default value if exists
+			val.Field(i).SetString(val.Type().Field(i).Tag.Get("default"))
 		}
 	}
 	return nil

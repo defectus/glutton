@@ -2,10 +2,10 @@ BINARY = glutton
 VET_REPORT = vet.report
 TEST_REPORT = tests.xml
 GOARCH ?= amd64
-GOOS ?= darwin
+GOOS ?= linux
 
 
-VERSION?=0.0.1
+VERSION?=0.1.0
 COMMIT=$(shell git rev-parse HEAD)
 BRANCH=$(shell git rev-parse --abbrev-ref HEAD)
 TAG=$(shell git describe --tags --abbrev=0)
