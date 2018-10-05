@@ -45,15 +45,18 @@ func TestValueFromEnvVar4(t *testing.T) {
 
 func TestValueFromEnvVar5(t *testing.T) {
 	os.Setenv("TEST", "TEST1")
-	os.Setenv("TESTTEST", "TEST2")
+	os.Setenv("TESTBOOL", "true")
+	os.Setenv("TESTINT", "1")
 	value := &struct {
 		Test     string `env:"TEST"`
-		TestTest string `env:"TESTTEST"`
+		TestBool bool   `env:"TESTBOOL"`
+		TestInt  int    `env:"TESTINT"`
 	}{}
 	err := valueFromEnvVar(value)
 	assert.NoError(t, err)
 	assert.Equal(t, "TEST1", value.Test)
-	assert.Equal(t, "TEST2", value.TestTest)
+	assert.Equal(t, 1, value.TestInt)
+	assert.True(t, value.TestBool)
 }
 
 func TestValueFromEnvVar7(t *testing.T) {

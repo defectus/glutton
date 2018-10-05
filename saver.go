@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 	"sync/atomic"
 
 	"github.com/pkg/errors"
@@ -36,10 +37,10 @@ func (s *SimpleFileSystemSaver) Save(payload *PayloadRecord) error {
 func (s *SimpleFileSystemSaver) Configure(settings *Settings) error {
 	s.root = settings.OutputFolder
 	s.basename = settings.BaseName
-	s.debug = settings.Debug == "true"
+	s.debug = settings.Debug
 	return nil
 }
 
 func (s *SimpleFileSystemSaver) filename(index int64) string {
-	return fmt.Sprintf(s.root+string(os.PathSeparator)+s.basename, index)
+	return fmt.Sprintf(filepath.Join(s.root, s.basename), index)
 }

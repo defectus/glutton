@@ -4,6 +4,7 @@ import (
 	"log"
 	"os"
 	"reflect"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
@@ -43,17 +44,29 @@ func valueFromEnvVar(value interface{}) error {
 		return errors.Errorf("valueFromEnvVar: only struct types are supported.")
 	}
 	for i := 0; i < val.NumField(); i++ {
-		if val.Type().Field(i).Type.Kind() != reflect.String {
-			return errors.Errorf("valueFromEnvVar: only string fields are supported, not %s.", val.Type().Field(i).Type.Kind().String())
-		}
 		tag := val.Type().Field(i).Tag.Get("env")
 		if len(tag) == 0 {
 			tag = val.Type().Field(i).Name
 		}
-		val.Field(i).SetString(os.Getenv(tag))
-		if len(val.Field(i).String()) == 0 {
-			// try to set default value if exists
-			val.Field(i).SetString(val.Type().Field(i).Tag.Get("default"))
+		v := os.Getenv(tag)
+		if len(v) == 0 {
+			v = val.Type().Field(i).Tag.Get("default")
+		}
+		switch val.Type().Field(i).Type.Kind() {
+		case reflect.String:
+			val.Field(i).SetString(v)
+		case reflect.Int:
+			in, _ := strconv.ParseInt(v, 10, 64)
+			val.Field(i).SetInt(in)
+		case reflect.Bool:
+			bo, _ := strconv.ParseBool(v)
+			val.Field(i).SetBool(bo)
+		case reflect.Ptr:
+			if  val.Type().Field(i).Type.Elem().Kind() == reflect.Struct {
+				valueFromEnvVar(val.Field(i).Pointer())
+			}
+		default:
+			return errors.Errorf("valueFromEnvVar: unsupported kind %s.", val.Type().Field(i).Type.Kind())
 		}
 	}
 	return nil

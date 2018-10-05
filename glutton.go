@@ -12,7 +12,7 @@ import (
 
 func Run() error {
 	env := createEnvironment(createSettings(new(Settings)))
-	if env.Settings.Debug == "true" {
+	if env.Settings.Debug {
 		log.Printf("current settings: %+v", env.Settings)
 	}
 	closing := make(chan struct{})
