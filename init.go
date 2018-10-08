@@ -62,8 +62,11 @@ func valueFromEnvVar(value interface{}) error {
 			bo, _ := strconv.ParseBool(v)
 			val.Field(i).SetBool(bo)
 		case reflect.Ptr:
-			if  val.Type().Field(i).Type.Elem().Kind() == reflect.Struct {
-				valueFromEnvVar(val.Field(i).Pointer())
+			if val.Type().Field(i).Type.Elem().Kind() == reflect.Struct {
+				err := valueFromEnvVar(val.Field(i).Interface())
+				if err != nil {
+					return errors.Wrapf(err, "error processing %s", val.Field(i).Type().Name())
+				}
 			}
 		default:
 			return errors.Errorf("valueFromEnvVar: unsupported kind %s.", val.Type().Field(i).Type.Kind())

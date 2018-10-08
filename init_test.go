@@ -59,6 +59,29 @@ func TestValueFromEnvVar5(t *testing.T) {
 	assert.True(t, value.TestBool)
 }
 
+func TestValueFromEnvVar6(t *testing.T) {
+	os.Setenv("TEST", "TEST1")
+	os.Setenv("TESTBOOL", "true")
+	os.Setenv("TESTINT", "1")
+	os.Setenv("INNER", "inner")
+	value := &struct {
+		Test       string `env:"TEST"`
+		TestBool   bool   `env:"TESTBOOL"`
+		TestInt    int    `env:"TESTINT"`
+		TestStruct *struct {
+			Inner string `env:"INNER"`
+		}
+	}{TestStruct: &struct {
+		Inner string `env:"INNER"`
+	}{}}
+	err := valueFromEnvVar(value)
+	assert.NoError(t, err)
+	assert.Equal(t, "inner", value.TestStruct.Inner)
+	assert.Equal(t, "TEST1", value.Test)
+	assert.Equal(t, 1, value.TestInt)
+	assert.True(t, value.TestBool)
+}
+
 func TestValueFromEnvVar7(t *testing.T) {
 	value := new(int)
 	err := valueFromEnvVar(value)
