@@ -15,3 +15,4 @@ tests.xml
 vet.report
 glutton-*
 glutton/glutton*
+private/**
