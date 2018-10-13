@@ -1,6 +1,7 @@
 package glutton
 
 import (
+	"log"
 	"os"
 	"testing"
 
@@ -86,4 +87,14 @@ func TestValueFromEnvVar7(t *testing.T) {
 	value := new(int)
 	err := valueFromEnvVar(value)
 	assert.Error(t, err)
+}
+
+func TestCreateInstanceOf(t *testing.T) {
+	log.Println("test this or ...")
+	t.Fail()
+}
+
+func TestCreateHandler(t *testing.T) {
+	log.Println("test this or ...")
+	t.Fail()
 }

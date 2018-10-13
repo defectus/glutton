@@ -10,28 +10,104 @@ import (
 	"github.com/pkg/errors"
 )
 
-func createSettings(settings *Settings) *Settings {
-	if settings == nil {
-		settings = &Settings{}
+func createConfiguration(configuration *Configuration) *Configuration {
+	if configuration == nil {
+		configuration = new(Configuration)
 	}
+	// first see if we're configured by yaml
+	// second, try to use environment to configure at lease on setting
+	settings := new(Settings)
 	err := valueFromEnvVar(settings)
 	if err != nil {
-		log.Panicf("createSettings: failed to read settings %+v", err)
+		log.Panicf("createConfigration: failed to read settings %+v", err)
 	}
-	return settings
+	configuration.Settings = append(configuration.Settings, *settings)
+	return configuration
 }
 
-func createEnvironment(settings *Settings) *Env {
-	env := &Env{Settings: settings}
+func createEnvironment(configuration *Configuration) *Env {
+	env := &Env{Configuration: configuration}
 	env.Server = gin.Default()
-	initializeRoutes(env.Server, env)
-	env.Notifier = &NilNotifier{}
-	env.Saver = &SimpleFileSystemSaver{}
-	env.Parser = &SimpleParser{}
-	env.Notifier.Configure(env.Settings)
-	env.Saver.Configure(env.Settings)
-	env.Parser.Configure(env.Settings)
+	gluttonRoute := initializeRoutes(env.Server, env)
+	env.Notifiers = map[string]reflect.Type{"NilNotifier": reflect.TypeOf(NilNotifier{}), "SimpleFileSystemSaver": reflect.TypeOf(SimpleFileSystemSaver{})}
+	env.Savers = map[string]reflect.Type{"SimpleFileSystemSaver": reflect.TypeOf(SimpleFileSystemSaver{})}
+	env.Parsers = map[string]reflect.Type{"SimpleParser": reflect.TypeOf(SimpleParser{})}
+	for _, settings := range env.Configuration.Settings {
+		var (
+			instance interface{}
+			notifier PayloadNotifier
+			saver    PayloadSaver
+			parser   PayloadParser
+			err      error
+			ok       bool
+		)
+		if len(settings.Notifier) > 0 {
+			instance, err = createInstanceOf(env.Notifiers, settings.Notifier, &settings)
+			if err != nil {
+				log.Panicf("error creating notifier %+v", err)
+			}
+			if notifier, ok = instance.(PayloadNotifier); !ok {
+				log.Panicf("exptected notifier, got %s", reflect.TypeOf(instance))
+			}
+		}
+		if len(settings.Saver) > 0 {
+			instance, err = createInstanceOf(env.Savers, settings.Saver, &settings)
+			if err != nil {
+				log.Panicf("error creating saver %+v", err)
+			}
+			if saver, ok = instance.(PayloadSaver); !ok {
+				log.Panicf("exptected saver, got %s", reflect.TypeOf(instance))
+			}
+		}
+		if len(settings.Parser) > 0 {
+			instance, err = createInstanceOf(env.Parsers, settings.Parser, &settings)
+			if err != nil {
+				log.Panicf("error creating parser %+v", err)
+			}
+			if parser, ok = instance.(PayloadParser); !ok {
+				log.Panicf("exptected parser, got %s", reflect.TypeOf(instance))
+			}
+		}
+		//TODO: ^^^^ default to nil or something one of the prevs. missing. ^^^^
+		gluttonRoute.POST(settings.URI, createHandler(gluttonRoute, settings.URI, parser, notifier, saver))
+	}
 	return env
+}
+
+// createHandler appends a route to router and initialize the basic flow (request -> parser -> notifier -> saver)
+func createHandler(baseRoute *gin.RouterGroup, URI string, parser PayloadParser, notifier PayloadNotifier, saver PayloadSaver) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		//TODO: finish this
+	}
+}
+
+// func savePayload(env *Env) gin.HandlerFunc {
+// 	return func(c *gin.Context) {
+// 		payload, err := env.Parser.Parse(c.Request)
+// 		if err != nil {
+
+// 		}
+// 		err = env.Notifier.Notify(payload)
+// 		if err != nil {
+
+// 		}
+// 		err = env.Saver.Save(payload)
+// 		if err != nil {
+
+// 		}
+// 		c.Status(http.StatusOK)
+// 	}
+// }
+
+func createInstanceOf(types map[string]reflect.Type, name string, settings *Settings) (interface{}, error) {
+	v := reflect.New(types[name]).Elem()
+	if c, ok := v.Interface().(Configurable); ok {
+		err := c.Configure(settings)
+		if err != nil {
+			return nil, errors.Wrapf(err, "error configuring instance %s with %+v", name, settings)
+		}
+	}
+	return v.Interface(), nil
 }
 
 func valueFromEnvVar(value interface{}) error {

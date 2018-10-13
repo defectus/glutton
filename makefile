@@ -53,7 +53,7 @@ clean:
 	-rm -f ${BINARY}-*
 
 docker:
-	docker build -f ops/Dockerfile -t defectus/glutton -t defectus/glutton:${TAG} .
-	docker push defectus/glutton defectus/glutton:${TAG}
+	docker build -f docker/Dockerfile -t defectus/glutton -t defectus/glutton:${TAG} .
+	docker push defectus/glutton:${TAG}
 
 .PHONY: test vet fmt clean docker

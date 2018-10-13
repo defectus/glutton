@@ -10,6 +10,7 @@ import (
 	"github.com/pkg/errors"
 )
 
+// SimpleFileSystemSaver saves request to filesystem.
 type SimpleFileSystemSaver struct {
 	root     string
 	basename string
@@ -17,6 +18,7 @@ type SimpleFileSystemSaver struct {
 	debug    bool
 }
 
+// Save saves payload (request) to configured filesystem destination.
 func (s *SimpleFileSystemSaver) Save(payload *PayloadRecord) error {
 	index := atomic.AddInt64(&s.counter, 1)
 	if s.debug {
@@ -34,6 +36,10 @@ func (s *SimpleFileSystemSaver) Save(payload *PayloadRecord) error {
 	return errors.Wrapf(err, "error closing output %s", payload.String())
 }
 
+// Configure bootstraps the SimpleFileSystemSaver
+// Namely the following params are used:
+// * OutputFolder
+// * BaseName - first part of the name
 func (s *SimpleFileSystemSaver) Configure(settings *Settings) error {
 	s.root = settings.OutputFolder
 	s.basename = settings.BaseName

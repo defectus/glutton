@@ -10,14 +10,15 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// Run is the entry point to Glutton.
 func Run() error {
-	env := createEnvironment(createSettings(new(Settings)))
-	if env.Settings.Debug {
-		log.Printf("current settings: %+v", env.Settings)
+	env := createEnvironment(createConfiguration(new(Configuration)))
+	if env.Configuration.Debug {
+		log.Printf("current settings: %+v", env.Configuration)
 	}
 	closing := make(chan struct{})
 	hookOnExit(closing)
-	go env.Server.Run(env.Settings.Host + ":" + env.Settings.Port)
+	go env.Server.Run(env.Configuration.Host + ":" + env.Configuration.Port)
 	<-closing
 	return nil
 }
@@ -33,32 +34,15 @@ func hookOnExit(closing chan struct{}) {
 	}(closing)
 }
 
-func initializeRoutes(router *gin.Engine, env *Env) {
+// initializeRoutes does the basic stuff needed to create a router.
+func initializeRoutes(router *gin.Engine, env *Env) *gin.RouterGroup {
 	config := cors.DefaultConfig()
 	config.AllowAllOrigins = true
 	config.AllowMethods = []string{"GET", "POST", "PUT", "HEAD", "PATCH"}
 	config.AllowHeaders = []string{"Origin", "Content-Length", "Content-Type"}
 	v1 := router.Group("v1")
 	glutton := v1.Group("glutton")
-	glutton.POST("/save", savePayload(env))
-}
-
-func savePayload(env *Env) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		payload, err := env.Parser.Parse(c.Request)
-		if err != nil {
-
-		}
-		err = env.Notifier.Notify(payload)
-		if err != nil {
-
-		}
-		err = env.Saver.Save(payload)
-		if err != nil {
-
-		}
-		c.Status(http.StatusOK)
-	}
+	return glutton
 }
 
 func renderError(c *gin.Context, err error) {

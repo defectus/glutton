@@ -1,11 +1,23 @@
 package glutton
 
-import "github.com/gin-gonic/gin"
+import (
+	"reflect"
 
+	"github.com/gin-gonic/gin"
+)
+
+type Configuration struct {
+	Settings []Settings
+	Debug    bool
+	Host     string `env:"HOST" default:"0.0.0.0"`
+	Port     string `env:"PORT" default:"4354"`
+}
+
+// Settings holds configuration of a single route.
 type Settings struct {
 	Name         string `env:"NAME" default:"your friendly glutton"`
-	Host         string `env:"HOST" default:"0.0.0.0"`
-	Port         string `env:"PORT" default:"4354"`
+	URI          string `env:URI default:save`
+	Redirect     string `env:REDIRECT`
 	OutputFolder string `env:"OUTPUT_FOLDER" default:"glutton"`
 	BaseName     string `env:"BASE_NAME" default:"glutton_%d"`
 	OutputDB     string `env:"OUTPUT_DB"`
@@ -16,12 +28,16 @@ type Settings struct {
 	SMTPFrom     string `env:"SMTP_FROM"`
 	SMTPPassword string `env:"SMTP_PASSWORD"`
 	SMTPTo       string `env:"SMTP_TO"`
+	Parser       string `env:"PARSER"`
+	Notifier     string `env:"NOTIFIER"`
+	Saver        string `env:"SAVER"`
 }
 
+// Env holds references to almost all application resources.
 type Env struct {
-	Settings *Settings
-	Notifier PayloadNotifier
-	Saver    PayloadSaver
-	Parser   PayloadParser
-	Server   *gin.Engine
+	Configuration *Configuration
+	Notifiers     map[string]reflect.Type
+	Savers        map[string]reflect.Type
+	Parsers       map[string]reflect.Type
+	Server        *gin.Engine
 }
