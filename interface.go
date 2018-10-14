@@ -7,11 +7,16 @@ import (
 	"time"
 )
 
+// PayloadRecord holds data related to a single request in a parsed form.
 type PayloadRecord struct {
-	Payload   string
+	// usually the string data of the request
+	Payload string
+	// timestamp at the time when the payload was created (not request received)
 	Timestamp time.Time
-	Meta      map[string][]string
-	Remote    string
+	// meta information, things like content-type and so on.
+	Meta map[string][]string
+	// remote address if provided (may be completely wrong if behind firewalls, proxies etc.)
+	Remote string
 }
 
 func (p *PayloadRecord) String() string {
@@ -43,7 +48,7 @@ type PayloadSaver interface {
 	Save(*PayloadRecord) error
 }
 
-// PayloadNotifier is anything that can notify (e.g. send an email, slack) of payload received. 
+// PayloadNotifier is anything that can notify (e.g. send an email, slack) of payload received.
 type PayloadNotifier interface {
 	Configurable
 	Notify(*PayloadRecord) error

@@ -1,10 +1,15 @@
 package glutton
 
 import (
+	"flag"
+	"io/ioutil"
 	"log"
+	"net/http"
 	"os"
 	"reflect"
 	"strconv"
+
+	"gopkg.in/yaml.v2"
 
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
@@ -14,19 +19,39 @@ func createConfiguration(configuration *Configuration) *Configuration {
 	if configuration == nil {
 		configuration = new(Configuration)
 	}
+	valueFromEnvVar(configuration)
 	// first see if we're configured by yaml
-	// second, try to use environment to configure at lease on setting
-	settings := new(Settings)
-	err := valueFromEnvVar(settings)
-	if err != nil {
-		log.Panicf("createConfigration: failed to read settings %+v", err)
+	file := flag.String("f", "", "configuration file path")
+	flag.BoolVar(&configuration.Debug, "d", false, "configuration file path")
+	flag.Parse()
+	if len(*file) > 0 {
+		bytes, err := ioutil.ReadFile(*file)
+		if err == nil {
+			if err = yaml.Unmarshal(bytes, configuration); err != nil {
+				log.Printf("createConfigration: error reading configuration file %s %+v", *file, err)
+			}
+		}
 	}
-	configuration.Settings = append(configuration.Settings, *settings)
+	// second, try to use environment to configure the app
+	if len(configuration.Settings) == 0 {
+		if configuration.Debug {
+			log.Printf("configuration afer yaml contains no settings, using environment to configure")
+		}
+		settings := new(Settings)
+		err := valueFromEnvVar(settings)
+		if err != nil {
+			log.Panicf("createConfigration: failed to read settings %+v", err)
+		}
+		configuration.Settings = append(configuration.Settings, *settings)
+	}
 	return configuration
 }
 
 func createEnvironment(configuration *Configuration) *Env {
 	env := &Env{Configuration: configuration}
+	if !configuration.Debug {
+		gin.SetMode(gin.ReleaseMode)
+	}
 	env.Server = gin.Default()
 	gluttonRoute := initializeRoutes(env.Server, env)
 	env.Notifiers = map[string]reflect.Type{"NilNotifier": reflect.TypeOf(NilNotifier{}), "SimpleFileSystemSaver": reflect.TypeOf(SimpleFileSystemSaver{})}
@@ -68,39 +93,35 @@ func createEnvironment(configuration *Configuration) *Env {
 				log.Panicf("exptected parser, got %s", reflect.TypeOf(instance))
 			}
 		}
-		//TODO: ^^^^ default to nil or something one of the prevs. missing. ^^^^
-		gluttonRoute.POST(settings.URI, createHandler(gluttonRoute, settings.URI, parser, notifier, saver))
+		gluttonRoute.POST(settings.URI, createHandler(gluttonRoute, settings.URI, parser, notifier, saver, settings.Debug))
 	}
 	return env
 }
 
 // createHandler appends a route to router and initialize the basic flow (request -> parser -> notifier -> saver)
-func createHandler(baseRoute *gin.RouterGroup, URI string, parser PayloadParser, notifier PayloadNotifier, saver PayloadSaver) gin.HandlerFunc {
+func createHandler(baseRoute *gin.RouterGroup, URI string, parser PayloadParser, notifier PayloadNotifier, saver PayloadSaver, debug bool) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		//TODO: finish this
+		payload, err := parser.Parse(c.Request)
+		if err != nil {
+			log.Printf("error parsing contents %+v", err)
+			log.Printf("%+v", c.Request)
+		}
+		err = notifier.Notify(payload)
+		if err != nil {
+			log.Printf("error notifying of payload %+v", err)
+			log.Printf("%+v", payload)
+		}
+		err = saver.Save(payload)
+		if err != nil {
+			log.Printf("error saving payload %+v", err)
+			log.Printf("%+v", payload)
+		}
+		c.Status(http.StatusOK)
 	}
 }
 
-// func savePayload(env *Env) gin.HandlerFunc {
-// 	return func(c *gin.Context) {
-// 		payload, err := env.Parser.Parse(c.Request)
-// 		if err != nil {
-
-// 		}
-// 		err = env.Notifier.Notify(payload)
-// 		if err != nil {
-
-// 		}
-// 		err = env.Saver.Save(payload)
-// 		if err != nil {
-
-// 		}
-// 		c.Status(http.StatusOK)
-// 	}
-// }
-
 func createInstanceOf(types map[string]reflect.Type, name string, settings *Settings) (interface{}, error) {
-	v := reflect.New(types[name]).Elem()
+	v := reflect.New(types[name])
 	if c, ok := v.Interface().(Configurable); ok {
 		err := c.Configure(settings)
 		if err != nil {
@@ -145,7 +166,7 @@ func valueFromEnvVar(value interface{}) error {
 				}
 			}
 		default:
-			return errors.Errorf("valueFromEnvVar: unsupported kind %s.", val.Type().Field(i).Type.Kind())
+			log.Printf("valueFromEnvVar: unsupported kind %s.", val.Type().Field(i).Type.Kind())
 		}
 	}
 	return nil

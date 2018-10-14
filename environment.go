@@ -6,31 +6,31 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// Configuration is the root of all configuration settings.
 type Configuration struct {
-	Settings []Settings
-	Debug    bool
-	Host     string `env:"HOST" default:"0.0.0.0"`
-	Port     string `env:"PORT" default:"4354"`
+	Settings []Settings `yaml:"settings"`
+	Debug    bool       `env:"DEBUG" yaml:"debug"`
+	Host     string     `env:"HOST" default:"0.0.0.0" yaml:"host"`
+	Port     string     `env:"PORT" default:"4354" yaml:"port"`
 }
 
 // Settings holds configuration of a single route.
 type Settings struct {
-	Name         string `env:"NAME" default:"your friendly glutton"`
-	URI          string `env:URI default:save`
-	Redirect     string `env:REDIRECT`
-	OutputFolder string `env:"OUTPUT_FOLDER" default:"glutton"`
-	BaseName     string `env:"BASE_NAME" default:"glutton_%d"`
-	OutputDB     string `env:"OUTPUT_DB"`
-	Debug        bool   `env:"DEBUG" default:"true"`
-	SMTPServer   string `env:"SMTP_SERVER" default:"smtp.gmail.com"`
-	SMTPPort     string `env:"SMTP_PORT" default:"25"`
-	SMTPUseTLS   bool   `env:"SMTP_USE_TLS" default:"true"`
-	SMTPFrom     string `env:"SMTP_FROM"`
-	SMTPPassword string `env:"SMTP_PASSWORD"`
-	SMTPTo       string `env:"SMTP_TO"`
-	Parser       string `env:"PARSER"`
-	Notifier     string `env:"NOTIFIER"`
-	Saver        string `env:"SAVER"`
+	Name         string `env:"NAME" default:"your friendly glutton" yaml:"name"`
+	Debug        bool   `env:"DEBUG" yaml:"debug"`
+	URI          string `env:"URI" default:"save" yaml:"uri"`
+	Redirect     string `env:"REDIRECT" yaml:"redirect" `
+	OutputFolder string `env:"OUTPUT_FOLDER" default:"glutton" yaml:"output_folder"`
+	BaseName     string `env:"BASE_NAME" default:"glutton_%d" yaml:"base_name"`
+	SMTPServer   string `env:"SMTP_SERVER" default:"smtp.gmail.com" yaml:"smtp_server"`
+	SMTPPort     string `env:"SMTP_PORT" default:"25" yaml:"smtp_port"`
+	SMTPUseTLS   bool   `env:"SMTP_USE_TLS" default:"true" yaml:"smtp_use_tls"`
+	SMTPFrom     string `env:"SMTP_FROM" yaml:"smtp_from"`
+	SMTPPassword string `env:"SMTP_PASSWORD" yaml:"smtp_password"`
+	SMTPTo       string `env:"SMTP_TO" yaml:"smtp_to"`
+	Parser       string `env:"PARSER" default:"SimpleParser" yaml:"parser"`
+	Notifier     string `env:"NOTIFIER" default:"NilNotifier" yaml:"notifier"`
+	Saver        string `env:"SAVER" default:"SimpleFileSystemSaver" yaml:"saver"`
 }
 
 // Env holds references to almost all application resources.

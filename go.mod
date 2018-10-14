@@ -20,5 +20,5 @@ require (
 	google.golang.org/genproto v0.0.0-20181004005441-af9cb2a35e7f
 	google.golang.org/grpc v1.15.0 // indirect
 	gopkg.in/go-playground/validator.v8 v8.18.2 // indirect
-	gopkg.in/yaml.v2 v2.2.1 // indirect
+	gopkg.in/yaml.v2 v2.2.1
 )

@@ -24,7 +24,7 @@ LDFLAGS = -ldflags "-s -w -X main.AUTHOR=${GITHUB_USERNAME} -X main.VERSION=${VE
 all: clean test vet build
 
 run: all
-	./${BINARY}-${GOOS}-${GOARCH}
+	./${BINARY}-${GOOS}-${GOARCH} -d
 
 build: 
 	cd ${BUILD_DIR}; \

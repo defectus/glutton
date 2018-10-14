@@ -1,15 +1,18 @@
 package glutton
 
 import (
-	"time"
-	"github.com/pkg/errors"
 	"io/ioutil"
 	"net/http"
+	"time"
+
+	"github.com/pkg/errors"
 )
 
+// SimpleParser is the default implementation if the parser interface.
 type SimpleParser struct {
 }
 
+// Parse reads request and builds a payload from it.
 func (s *SimpleParser) Parse(req *http.Request) (*PayloadRecord, error) {
 	payload := &PayloadRecord{}
 	body, err := ioutil.ReadAll(req.Body)
@@ -23,6 +26,7 @@ func (s *SimpleParser) Parse(req *http.Request) (*PayloadRecord, error) {
 	return payload, nil
 }
 
-func (n *SimpleParser) Configure(*Settings) error {
+// Configure initilizes the instance of parser.
+func (s *SimpleParser) Configure(*Settings) error {
 	return nil
 }
