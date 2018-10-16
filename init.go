@@ -93,27 +93,27 @@ func createEnvironment(configuration *Configuration) *Env {
 				log.Panicf("exptected parser, got %s", reflect.TypeOf(instance))
 			}
 		}
-		gluttonRoute.POST(settings.URI, createHandler(gluttonRoute, settings.URI, parser, notifier, saver, settings.Debug))
+		gluttonRoute.POST(settings.URI, createHandler(settings.URI, parser, notifier, saver, settings.Debug))
 	}
 	return env
 }
 
 // createHandler appends a route to router and initialize the basic flow (request -> parser -> notifier -> saver)
-func createHandler(baseRoute *gin.RouterGroup, URI string, parser PayloadParser, notifier PayloadNotifier, saver PayloadSaver, debug bool) gin.HandlerFunc {
+func createHandler(URI string, parser PayloadParser, notifier PayloadNotifier, saver PayloadSaver, debug bool) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		payload, err := parser.Parse(c.Request)
 		if err != nil {
-			log.Printf("error parsing contents %+v", err)
+			log.Printf("%s: error parsing contents %+v", URI, err)
 			log.Printf("%+v", c.Request)
 		}
 		err = notifier.Notify(payload)
 		if err != nil {
-			log.Printf("error notifying of payload %+v", err)
+			log.Printf("%s: error notifying of payload %+v", URI, err)
 			log.Printf("%+v", payload)
 		}
 		err = saver.Save(payload)
 		if err != nil {
-			log.Printf("error saving payload %+v", err)
+			log.Printf("%s: error saving payload %+v", URI, err)
 			log.Printf("%+v", payload)
 		}
 		c.Status(http.StatusOK)
