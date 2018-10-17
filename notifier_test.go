@@ -13,7 +13,7 @@ func TestSMTPNotifier_Notify1(t *testing.T) {
 	if len(os.Getenv("SMTP_SERVER")) == 0 {
 		t.Skip("make sure required env. variables are set before running this script, skipping")
 	}
-	settings := createConfiguration(new(Configuration))
+	settings := createConfiguration(new(Configuration), true, nil)
 	smtpNotifier := new(SMTPNotifier)
 	err := smtpNotifier.Configure(&settings.Settings[0])
 	assert.NoError(t, err)

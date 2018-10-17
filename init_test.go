@@ -179,3 +179,22 @@ func testHTTPResponse(t *testing.T, r *gin.Engine, req *http.Request, f func(w *
 		t.Fail()
 	}
 }
+
+func TestCreateConfiguration1(t *testing.T) {
+	os.Args = []string{"test", "-d"}
+	config := createConfiguration(nil, true, nil)
+	assert.True(t, config.Debug)
+}
+
+func TestCreateConfiguration2(t *testing.T) {
+	os.Args = []string{"test", "-d"}
+	yaml := `
+settings:
+  - name: test glutton
+    redirect: /url
+    parser: test`
+	config := createConfiguration(nil, true, []byte(yaml))
+	assert.Equal(t, "test glutton", config.Settings[0].Name)
+	assert.Equal(t, "/url", config.Settings[0].Redirect)
+	assert.Equal(t, "test", config.Settings[0].Parser)
+}

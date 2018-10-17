@@ -1,6 +1,8 @@
 package glutton
 
 import (
+	"flag"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -12,7 +14,22 @@ import (
 
 // Run is the entry point to Glutton.
 func Run() error {
-	env := createEnvironment(createConfiguration(new(Configuration)))
+	var (
+		yamlConfiguration []byte
+		err               error
+	)
+	// first see if we're configured by yaml
+	file := flag.String("f", "", "configuration file path")
+	debug := flag.Bool("d", false, "configuration file path")
+	flag.Parse()
+	
+	if len(*file) > 0 {
+		yamlConfiguration, err = ioutil.ReadFile(*file)
+		if err != nil {
+			log.Panicf("error reading configuration file %s %+v", *file, err)
+		}
+	}
+	env := createEnvironment(createConfiguration(new(Configuration), *debug, yamlConfiguration))
 	if env.Configuration.Debug {
 		log.Printf("current settings: %+v", env.Configuration)
 	}

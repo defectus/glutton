@@ -1,8 +1,6 @@
 package glutton
 
 import (
-	"flag"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -15,21 +13,15 @@ import (
 	"github.com/pkg/errors"
 )
 
-func createConfiguration(configuration *Configuration) *Configuration {
+func createConfiguration(configuration *Configuration, debug bool, yamlConfiguration []byte) *Configuration {
 	if configuration == nil {
 		configuration = new(Configuration)
 	}
 	valueFromEnvVar(configuration)
-	// first see if we're configured by yaml
-	file := flag.String("f", "", "configuration file path")
-	flag.BoolVar(&configuration.Debug, "d", false, "configuration file path")
-	flag.Parse()
-	if len(*file) > 0 {
-		bytes, err := ioutil.ReadFile(*file)
-		if err == nil {
-			if err = yaml.Unmarshal(bytes, configuration); err != nil {
-				log.Printf("createConfigration: error reading configuration file %s %+v", *file, err)
-			}
+	configuration.Debug = debug
+	if len(yamlConfiguration) > 0 {
+		if err := yaml.Unmarshal(yamlConfiguration, configuration); err != nil {
+			log.Printf("createConfigration: error parsing configuration %+v", err)
 		}
 	}
 	// second, try to use environment to configure the app
