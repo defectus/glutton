@@ -1,0 +1,27 @@
+package notifier
+
+import (
+	"log"
+	"os"
+	"testing"
+	"time"
+
+	"github.com/stretchr/testify/assert"
+)
+
+func TestSMTPNotifier_Notify1(t *testing.T) {
+	if len(os.Getenv("SMTP_SERVER")) == 0 {
+		t.Skip("make sure required env. variables are set before running this script, skipping")
+	}
+	settings := createConfiguration(new(Configuration), true, nil)
+	smtpNotifier := new(SMTPNotifier)
+	err := smtpNotifier.Configure(&settings.Settings[0])
+	assert.NoError(t, err)
+	log.Printf("smtpNotifier:%+v", smtpNotifier)
+	err = smtpNotifier.Notify(&PayloadRecord{
+		Payload:   "test payload",
+		Timestamp: time.Now(),
+		Remote:    "0.0.0.0",
+	})
+	assert.NoError(t, err)
+}
