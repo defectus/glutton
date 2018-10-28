@@ -5,7 +5,7 @@ GOARCH ?= amd64
 GOOS ?= linux
 
 
-VERSION?=1.0.0
+VERSION?=1.1.0
 COMMIT=$(shell git rev-parse HEAD)
 BRANCH=$(shell git rev-parse --abbrev-ref HEAD)
 TAG=$(shell git describe --tags --abbrev=0)
@@ -28,7 +28,7 @@ run: all
 
 build: 
 	cd ${BUILD_DIR}; \
-	GOOS=${GOOS} GOARCH=${GOARCH} go build ${LDFLAGS} -o ${BINARY}-${GOOS}-${GOARCH} cmd/main.go ; \
+	GOOS=${GOOS} GOARCH=${GOARCH} go build ${LDFLAGS} -o ${BINARY}-${GOOS}-${GOARCH} cmd/glutton/main.go ; \
 	cd - >/dev/null
 
 test:
