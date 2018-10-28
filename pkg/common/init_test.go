@@ -9,6 +9,7 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/defectus/glutton/pkg/iface"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/mock"
 
@@ -100,7 +101,7 @@ type MockConfigurable struct {
 	mock.Mock
 }
 
-func (m *MockConfigurable) Configure(*Settings) error {
+func (m *MockConfigurable) Configure(*iface.Settings) error {
 	return nil
 }
 
@@ -116,12 +117,12 @@ type MockSaver struct {
 	mock.Mock
 }
 
-func (m *MockSaver) Save(*PayloadRecord) error {
+func (m *MockSaver) Save(*iface.PayloadRecord) error {
 	args := m.Called()
 	return args.Error(0)
 }
 
-func (m *MockSaver) Configure(*Settings) error {
+func (m *MockSaver) Configure(*iface.Settings) error {
 	return nil
 }
 
@@ -129,31 +130,31 @@ type MockParser struct {
 	mock.Mock
 }
 
-func (m *MockParser) Configure(*Settings) error {
+func (m *MockParser) Configure(*iface.Settings) error {
 	return nil
 }
 
-func (m *MockParser) Parse(*http.Request) (*PayloadRecord, error) {
+func (m *MockParser) Parse(*http.Request) (*iface.PayloadRecord, error) {
 	args := m.Called()
-	return args.Get(0).(*PayloadRecord), args.Error(1)
+	return args.Get(0).(*iface.PayloadRecord), args.Error(1)
 }
 
 type MockNotifier struct {
 	mock.Mock
 }
 
-func (m *MockNotifier) Configure(*Settings) error {
+func (m *MockNotifier) Configure(*iface.Settings) error {
 	return nil
 }
 
-func (m *MockNotifier) Notify(*PayloadRecord) error {
+func (m *MockNotifier) Notify(*iface.PayloadRecord) error {
 	args := m.Called()
 	return args.Error(0)
 }
 
 func TestCreateHandler(t *testing.T) {
 	mp := &MockParser{}
-	mp.On("Parse").Return(&PayloadRecord{}, nil)
+	mp.On("Parse").Return(&iface.PayloadRecord{}, nil)
 	ms := &MockSaver{}
 	ms.On("Save").Return(nil)
 	mn := &MockNotifier{}
@@ -182,7 +183,7 @@ func testHTTPResponse(t *testing.T, r *gin.Engine, req *http.Request, f func(w *
 
 func TestCreateConfiguration1(t *testing.T) {
 	os.Args = []string{"test", "-d"}
-	config := createConfiguration(nil, true, nil)
+	config := CreateConfiguration(nil, true, nil)
 	assert.True(t, config.Debug)
 }
 
@@ -193,7 +194,7 @@ settings:
   - name: test glutton
     redirect: /url
     parser: test`
-	config := createConfiguration(nil, true, []byte(yaml))
+	config := CreateConfiguration(nil, true, []byte(yaml))
 	assert.Equal(t, "test glutton", config.Settings[0].Name)
 	assert.Equal(t, "/url", config.Settings[0].Redirect)
 	assert.Equal(t, "test", config.Settings[0].Parser)

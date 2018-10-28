@@ -17,7 +17,8 @@ import (
 	"github.com/defectus/glutton/pkg/iface"
 )
 
-func createConfiguration(configuration *iface.Configuration, debug bool, yamlConfiguration []byte) *iface.Configuration {
+// CreateConfiguration makes a configuration by creating or enhancing an existing one. Configuration is made form env. variables (last step) or yaml file (first step). The yaml file is provided as a slice of bytes.
+func CreateConfiguration(configuration *iface.Configuration, debug bool, yamlConfiguration []byte) *iface.Configuration {
 	if configuration == nil {
 		configuration = new(iface.Configuration)
 	}
