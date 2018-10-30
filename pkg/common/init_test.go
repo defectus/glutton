@@ -173,6 +173,49 @@ func TestCreateHandler(t *testing.T) {
 	})
 }
 
+func TestCreateRedirectHandlerNoRedirect(t *testing.T) {
+	mp := &MockParser{}
+	mp.On("Parse").Return(&iface.PayloadRecord{}, nil)
+	ms := &MockSaver{}
+	ms.On("Save").Return(nil)
+	mn := &MockNotifier{}
+	mn.On("Notify").Return(nil)
+	router := gin.Default()
+	router.POST("test", redirectHandler(createHandler("test", mp, mn, ms, false), http.StatusTemporaryRedirect, ""))
+	req, _ := http.NewRequest("POST", "http://localhost/test", nil)
+	testHTTPResponse(t, router, req, func(w *httptest.ResponseRecorder) bool {
+		assert.Equal(t, http.StatusOK, w.Code)
+		p, _ := ioutil.ReadAll(w.Body)
+		log.Printf("server reply: %s", string(p))
+		mp.AssertExpectations(t)
+		ms.AssertExpectations(t)
+		mn.AssertExpectations(t)
+		return true
+	})
+}
+
+func TestCreateRedirectHandlerRedirect(t *testing.T) {
+	mp := &MockParser{}
+	mp.On("Parse").Return(&iface.PayloadRecord{}, nil)
+	ms := &MockSaver{}
+	ms.On("Save").Return(nil)
+	mn := &MockNotifier{}
+	mn.On("Notify").Return(nil)
+	router := gin.Default()
+	router.POST("test", redirectHandler(createHandler("test", mp, mn, ms, false), http.StatusTemporaryRedirect, "https://test.redirect"))
+	req, _ := http.NewRequest("POST", "http://localhost/test", nil)
+	testHTTPResponse(t, router, req, func(w *httptest.ResponseRecorder) bool {
+		assert.Equal(t, http.StatusTemporaryRedirect, w.Code)
+		p, _ := ioutil.ReadAll(w.Body)
+		log.Printf("server reply: %s", string(p))
+		log.Printf("server header: %+v", w.HeaderMap)
+		mp.AssertExpectations(t)
+		ms.AssertExpectations(t)
+		mn.AssertExpectations(t)
+		return true
+	})
+}
+
 func testHTTPResponse(t *testing.T, r *gin.Engine, req *http.Request, f func(w *httptest.ResponseRecorder) bool) {
 	w := httptest.NewRecorder()
 	r.ServeHTTP(w, req)

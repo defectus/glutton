@@ -81,8 +81,11 @@ Requests are stored on a path defined by the `OUTPUT_FOLDER` variable. If ommite
 
 In the future releases you hopefully find the following features
 
-* saving to database
-* redirect on save
-* auth tokens (allow saving with a valid token only)
+❌ saving to database
+
+✔️ redirect on save 
+
+❌ auth tokens (allow saving with a valid token only)
+
 
 above all, keep this project low profile, I'm not building an application server here. glutton must be simple, stupid.

@@ -9,12 +9,12 @@ import (
 
 	"gopkg.in/yaml.v2"
 
+	"github.com/defectus/glutton/pkg/iface"
+	"github.com/defectus/glutton/pkg/notifier"
+	"github.com/defectus/glutton/pkg/parser"
+	"github.com/defectus/glutton/pkg/saver"
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
-	"github.com/defectus/glutton/pkg/notifier"
-	"github.com/defectus/glutton/pkg/saver"
-	"github.com/defectus/glutton/pkg/parser"
-	"github.com/defectus/glutton/pkg/iface"
 )
 
 // CreateConfiguration makes a configuration by creating or enhancing an existing one. Configuration is made form env. variables (last step) or yaml file (first step). The yaml file is provided as a slice of bytes.
@@ -90,9 +90,20 @@ func createEnvironment(configuration *iface.Configuration) *iface.Env {
 				log.Panicf("exptected parser, got %s", reflect.TypeOf(instance))
 			}
 		}
-		gluttonRoute.POST(settings.URI, createHandler(settings.URI, parser, notifier, saver, settings.Debug))
+		handler := createHandler(settings.URI, parser, notifier, saver, settings.Debug)
+		gluttonRoute.POST(settings.URI, redirectHandler(handler, http.StatusTemporaryRedirect, settings.Redirect))
 	}
 	return env
+}
+
+func redirectHandler(handler gin.HandlerFunc, code int, location string) gin.HandlerFunc {
+	if len(location) == 0 {
+		return handler
+	}
+	return func(c *gin.Context) {
+		handler(c)
+		c.Redirect(code, location)
+	}
 }
 
 // createHandler appends a route to router and initialize the basic flow (request -> parser -> notifier -> saver)
