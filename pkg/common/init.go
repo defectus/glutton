@@ -44,16 +44,15 @@ func CreateConfiguration(configuration *iface.Configuration, debug bool, yamlCon
 	return configuration
 }
 
+// createEnvironment prepares the whole environment - provided with a configuration it creates all structs and handlers.
 func createEnvironment(configuration *iface.Configuration) *iface.Env {
 	env := &iface.Env{Configuration: configuration}
 	if !configuration.Debug {
 		gin.SetMode(gin.ReleaseMode)
 	}
 	env.Server = gin.Default()
+	registerCompoments(env)
 	gluttonRoute := initializeRoutes(env.Server, env)
-	env.Notifiers = map[string]reflect.Type{"NilNotifier": reflect.TypeOf(notifier.NilNotifier{}), "SMTPNotifier": reflect.TypeOf(notifier.SMTPNotifier{})}
-	env.Savers = map[string]reflect.Type{"SimpleFileSystemSaver": reflect.TypeOf(saver.SimpleFileSystemSaver{})}
-	env.Parsers = map[string]reflect.Type{"SimpleParser": reflect.TypeOf(parser.SimpleParser{})}
 	for _, settings := range env.Configuration.Settings {
 		var (
 			instance interface{}
@@ -96,6 +95,7 @@ func createEnvironment(configuration *iface.Configuration) *iface.Env {
 	return env
 }
 
+// redirectHandler wraps the supplied handler into a redirect call. If the location parameters is empty no redirect is performed.
 func redirectHandler(handler gin.HandlerFunc, code int, location string) gin.HandlerFunc {
 	if len(location) == 0 {
 		return handler
@@ -128,6 +128,13 @@ func createHandler(URI string, parser iface.PayloadParser, notifier iface.Payloa
 	}
 }
 
+func registerCompoments(env *iface.Env) {
+	env.Notifiers = map[string]reflect.Type{"NilNotifier": reflect.TypeOf(notifier.NilNotifier{}), "SMTPNotifier": reflect.TypeOf(notifier.SMTPNotifier{})}
+	env.Savers = map[string]reflect.Type{"SimpleFileSystemSaver": reflect.TypeOf(saver.SimpleFileSystemSaver{})}
+	env.Parsers = map[string]reflect.Type{"SimpleParser": reflect.TypeOf(parser.SimpleParser{})}
+}
+
+// createInstanceOf creates an instance of given name and configures it with the given settings (if implements the Configurable interface).
 func createInstanceOf(types map[string]reflect.Type, name string, settings *iface.Settings) (interface{}, error) {
 	v := reflect.New(types[name])
 	if c, ok := v.Interface().(iface.Configurable); ok {
@@ -139,6 +146,8 @@ func createInstanceOf(types map[string]reflect.Type, name string, settings *ifac
 	return v.Interface(), nil
 }
 
+// valueFromEnvVar recursively traverses supplied variable (pointer to a structure) and assign values based on each field's `env` tag. Should if containt an `env` and the corresponding env variable be empty the `default` tag's value is used.
+// Note that strings, bools and ints are supported at the moment.
 func valueFromEnvVar(value interface{}) error {
 	val := reflect.ValueOf(value)
 	if val.Kind() != reflect.Ptr {

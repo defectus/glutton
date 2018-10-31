@@ -1,6 +1,7 @@
 package common
 
 import (
+	"context"
 	"flag"
 	"io/ioutil"
 	"log"
@@ -8,9 +9,9 @@ import (
 	"os"
 	"os/signal"
 
+	"github.com/defectus/glutton/pkg/iface"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
-	"github.com/defectus/glutton/pkg/iface"
 )
 
 // Run is the entry point to Glutton.
@@ -23,7 +24,7 @@ func Run() error {
 	file := flag.String("f", "", "configuration file path")
 	debug := flag.Bool("d", false, "configuration file path")
 	flag.Parse()
-	
+
 	if len(*file) > 0 {
 		yamlConfiguration, err = ioutil.ReadFile(*file)
 		if err != nil {
@@ -34,22 +35,22 @@ func Run() error {
 	if env.Configuration.Debug {
 		log.Printf("current settings: %+v", env.Configuration)
 	}
-	closing := make(chan struct{})
-	hookOnExit(closing)
+	appContext, cancelFunc := context.WithCancel(context.Background())
+	hookOnExit(cancelFunc)
 	go env.Server.Run(env.Configuration.Host + ":" + env.Configuration.Port)
-	<-closing
+	<-appContext.Done()
 	return nil
 }
 
 // hookOnExit listens for signal SIGHUP and once received it closes the provided `closing` channel.
-func hookOnExit(closing chan struct{}) {
-	go func(closing chan struct{}) {
+func hookOnExit(cancelFunc context.CancelFunc) {
+	go func(cancelFunc context.CancelFunc) {
 		signals := make(chan os.Signal, 1)
 		signal.Notify(signals, os.Kill, os.Interrupt)
 		<-signals
 		log.Println("Initiating shutdown ...")
-		close(closing)
-	}(closing)
+		cancelFunc()
+	}(cancelFunc)
 }
 
 // initializeRoutes does the basic stuff needed to create a router.
