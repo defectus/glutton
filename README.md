@@ -41,6 +41,8 @@ settings:
     smtp_use_tls: true
     smtp_from: your@email.address
     smtp_to: target@email.address
+    token_key: 01234567890 # a key to use to encrypt access tokens, if enabled
+    use_token: false 
 ```
 
 As you can see, the settings is fairly straight forward. When using the environment keys are:
@@ -67,6 +69,11 @@ SMTPNotifier settings
 * `SMTP_FROM`
 * `SMTP_TO`
 
+Token settings
+
+* `USE_TOKEN`
+* `TOKEN_KEY`
+
 Please note that only one route can be defined with environment variables.
 
 ## Endpoint
@@ -85,7 +92,7 @@ In the future releases you hopefully find the following features
 
 ✔️ redirect on save 
 
-❌ auth tokens (allow saving with a valid token only)
+️️✔️ auth tokens (allow saving with a valid token only)
 
 
 above all, keep this project low profile, I'm not building an application server here. glutton must be simple, stupid.

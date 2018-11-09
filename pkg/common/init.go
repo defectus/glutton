@@ -6,9 +6,11 @@ import (
 	"os"
 	"reflect"
 	"strconv"
+	"time"
 
 	"gopkg.in/yaml.v2"
 
+	"github.com/defectus/glutton/pkg/auth"
 	"github.com/defectus/glutton/pkg/iface"
 	"github.com/defectus/glutton/pkg/notifier"
 	"github.com/defectus/glutton/pkg/parser"
@@ -45,8 +47,15 @@ func CreateConfiguration(configuration *iface.Configuration, debug bool, yamlCon
 }
 
 // createEnvironment prepares the whole environment - provided with a configuration it creates all structs and handlers.
-func createEnvironment(configuration *iface.Configuration) *iface.Env {
-	env := &iface.Env{Configuration: configuration}
+func createEnvironment(configuration *iface.Configuration, env *iface.Env) *iface.Env {
+	if env == nil {
+		env = &iface.Env{
+			Savers:    map[string]reflect.Type{},
+			Notifiers: map[string]reflect.Type{},
+			Parsers:   map[string]reflect.Type{},
+		}
+	}
+	env.Configuration = configuration
 	if !configuration.Debug {
 		gin.SetMode(gin.ReleaseMode)
 	}
@@ -90,9 +99,24 @@ func createEnvironment(configuration *iface.Configuration) *iface.Env {
 			}
 		}
 		handler := createHandler(settings.URI, parser, notifier, saver, settings.Debug)
+		if settings.UseToken {
+			handler = validateTokenHandler(handler, settings.URI, []byte(settings.TokenKey), configuration.Debug)
+		}
 		gluttonRoute.POST(settings.URI, redirectHandler(handler, http.StatusTemporaryRedirect, settings.Redirect))
+		gluttonRoute.GET(settings.URI+"/token", createTokenHandler(settings.URI, []byte(settings.TokenKey), configuration.Debug))
 	}
 	return env
+}
+
+func createTokenHandler(uri string, key []byte, debug bool) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		tokenProvider := auth.NewDefaultTokenProvider(5*time.Minute, []byte(key), debug)
+		token, err := tokenProvider.GenerateToken(uri, time.Now())
+		if err != nil {
+			log.Printf("error generating token %+v", err)
+		}
+		c.Writer.Write([]byte(token))
+	}
 }
 
 // redirectHandler wraps the supplied handler into a redirect call. If the location parameters is empty no redirect is performed.
@@ -103,6 +127,22 @@ func redirectHandler(handler gin.HandlerFunc, code int, location string) gin.Han
 	return func(c *gin.Context) {
 		handler(c)
 		c.Redirect(code, location)
+	}
+}
+
+// validateTokenHandler wraps target handler into token validation block.
+func validateTokenHandler(handler gin.HandlerFunc, uri string, key []byte, debug bool) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		tokenProvider := auth.NewDefaultTokenProvider(5*time.Minute, key, debug)
+		valid, err := tokenProvider.ValidateToken(c.GetHeader("token"), uri, time.Now())
+		if err != nil {
+			log.Printf("a valid token required but validation failed with %+v", err)
+		}
+		if !valid {
+			c.Status(http.StatusPreconditionFailed)
+			return
+		}
+		handler(c)
 	}
 }
 
@@ -129,13 +169,17 @@ func createHandler(URI string, parser iface.PayloadParser, notifier iface.Payloa
 }
 
 func registerCompoments(env *iface.Env) {
-	env.Notifiers = map[string]reflect.Type{"NilNotifier": reflect.TypeOf(notifier.NilNotifier{}), "SMTPNotifier": reflect.TypeOf(notifier.SMTPNotifier{})}
-	env.Savers = map[string]reflect.Type{"SimpleFileSystemSaver": reflect.TypeOf(saver.SimpleFileSystemSaver{})}
-	env.Parsers = map[string]reflect.Type{"SimpleParser": reflect.TypeOf(parser.SimpleParser{})}
+	env.Notifiers["NilNotifier"] = reflect.TypeOf(notifier.NilNotifier{})
+	env.Notifiers["SMTPNotifier"] = reflect.TypeOf(notifier.SMTPNotifier{})
+	env.Savers["SimpleFileSystemSaver"] = reflect.TypeOf(saver.SimpleFileSystemSaver{})
+	env.Parsers["SimpleParser"] = reflect.TypeOf(parser.SimpleParser{})
 }
 
 // createInstanceOf creates an instance of given name and configures it with the given settings (if implements the Configurable interface).
 func createInstanceOf(types map[string]reflect.Type, name string, settings *iface.Settings) (interface{}, error) {
+	if _, found := types[name]; !found {
+		return nil, errors.Errorf("type not found error configuring instance %s with types %+v", name, types)
+	}
 	v := reflect.New(types[name])
 	if c, ok := v.Interface().(iface.Configurable); ok {
 		err := c.Configure(settings)

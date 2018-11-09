@@ -31,6 +31,8 @@ type Settings struct {
 	Parser       string `env:"PARSER" default:"SimpleParser" yaml:"parser"`
 	Notifier     string `env:"NOTIFIER" default:"NilNotifier" yaml:"notifier"`
 	Saver        string `env:"SAVER" default:"SimpleFileSystemSaver" yaml:"saver"`
+	UseToken     bool   `env:"USE_TOKEN" default:"false" yaml:"use_token"`
+	TokenKey     string `env:"TOKEN_KEY" yaml:"token_key"`
 }
 
 // Env holds references to almost all application resources.

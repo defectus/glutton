@@ -31,7 +31,7 @@ func Run() error {
 			log.Panicf("error reading configuration file %s %+v", *file, err)
 		}
 	}
-	env := createEnvironment(CreateConfiguration(new(iface.Configuration), *debug, yamlConfiguration))
+	env := createEnvironment(CreateConfiguration(new(iface.Configuration), *debug, yamlConfiguration), nil)
 	if env.Configuration.Debug {
 		log.Printf("current settings: %+v", env.Configuration)
 	}

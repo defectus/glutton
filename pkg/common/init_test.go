@@ -117,12 +117,25 @@ type MockSaver struct {
 	mock.Mock
 }
 
-func (m *MockSaver) Save(*iface.PayloadRecord) error {
+func (m *MockSaver) Save(payload *iface.PayloadRecord) error {
 	args := m.Called()
 	return args.Error(0)
 }
 
 func (m *MockSaver) Configure(*iface.Settings) error {
+	return nil
+}
+
+type TestSaver struct {
+}
+
+func (t *TestSaver) Save(payload *iface.PayloadRecord) error {
+	log.Printf("TestSaver_Save called with %+v", payload)
+	return nil
+}
+
+func (t *TestSaver) Configure(settings *iface.Settings) error {
+	log.Printf("TestSaver_Configure called with %+v", settings)
 	return nil
 }
 
@@ -134,9 +147,22 @@ func (m *MockParser) Configure(*iface.Settings) error {
 	return nil
 }
 
-func (m *MockParser) Parse(*http.Request) (*iface.PayloadRecord, error) {
+func (m *MockParser) Parse(request *http.Request) (*iface.PayloadRecord, error) {
 	args := m.Called()
 	return args.Get(0).(*iface.PayloadRecord), args.Error(1)
+}
+
+type TestParser struct {
+}
+
+func (t *TestParser) Configure(settings *iface.Settings) error {
+	log.Printf("TestParser_Configure called with %+v", settings)
+	return nil
+}
+
+func (t *TestParser) Parse(request *http.Request) (*iface.PayloadRecord, error) {
+	log.Printf("TestParser_Parse called with %+v", request)
+	return &iface.PayloadRecord{}, nil
 }
 
 type MockNotifier struct {
@@ -150,6 +176,19 @@ func (m *MockNotifier) Configure(*iface.Settings) error {
 func (m *MockNotifier) Notify(*iface.PayloadRecord) error {
 	args := m.Called()
 	return args.Error(0)
+}
+
+type TestNotifier struct {
+}
+
+func (t *TestNotifier) Configure(settings *iface.Settings) error {
+	log.Printf("TestNotifier_Configure called with %+v", settings)
+	return nil
+}
+
+func (t *TestNotifier) Notify(payload *iface.PayloadRecord) error {
+	log.Printf("TestNotifier_Notify called with %+v", payload)
+	return nil
 }
 
 func TestCreateHandler(t *testing.T) {
@@ -212,6 +251,99 @@ func TestCreateRedirectHandlerRedirect(t *testing.T) {
 		mp.AssertExpectations(t)
 		ms.AssertExpectations(t)
 		mn.AssertExpectations(t)
+		return true
+	})
+}
+
+func TestGenerateToken(t *testing.T) {
+	env := createEnvironment(&iface.Configuration{
+		Debug: true,
+		Settings: []iface.Settings{
+			{
+				UseToken: true,
+				URI:      "save",
+			},
+		},
+	}, nil)
+	req, _ := http.NewRequest("GET", "http://localhost/v1/glutton/save/token", nil)
+	testHTTPResponse(t, env.Server, req, func(w *httptest.ResponseRecorder) bool {
+		assert.Equal(t, http.StatusOK, w.Code)
+		p, _ := ioutil.ReadAll(w.Body)
+		log.Printf("server reply: %s", string(p))
+		log.Printf("server header: %+v", w.HeaderMap)
+		return true
+	})
+}
+
+func TestValidateToken1(t *testing.T) {
+	// test fail token (token invalid)
+	env := &iface.Env{
+		Savers:    map[string]reflect.Type{},
+		Notifiers: map[string]reflect.Type{},
+		Parsers:   map[string]reflect.Type{},
+	}
+	env.Notifiers["TestNotifier"] = reflect.TypeOf(TestNotifier{})
+	env.Savers["TestSaver"] = reflect.TypeOf(TestSaver{})
+	env.Parsers["TestParser"] = reflect.TypeOf(TestParser{})
+	env = createEnvironment(&iface.Configuration{
+		Debug: true,
+		Settings: []iface.Settings{
+			{
+				UseToken: true,
+				URI:      "save",
+				Saver:    "TestSaver",
+				Parser:   "TestParser",
+				Notifier: "TestNotifier",
+			},
+		},
+	}, env)
+	req, _ := http.NewRequest("POST", "http://localhost/v1/glutton/save", nil)
+	req.Header.Add("token", "dummy")
+	testHTTPResponse(t, env.Server, req, func(w *httptest.ResponseRecorder) bool {
+		assert.Equal(t, http.StatusPreconditionFailed, w.Code)
+		p, _ := ioutil.ReadAll(w.Body)
+		log.Printf("server reply: %s", string(p))
+		log.Printf("server header: %+v", w.HeaderMap)
+		return true
+	})
+}
+
+func TestValidateToken2(t *testing.T) {
+	// test get token and use token
+	env := &iface.Env{
+		Savers:    map[string]reflect.Type{},
+		Notifiers: map[string]reflect.Type{},
+		Parsers:   map[string]reflect.Type{},
+	}
+	env.Notifiers["TestNotifier"] = reflect.TypeOf(TestNotifier{})
+	env.Savers["TestSaver"] = reflect.TypeOf(TestSaver{})
+	env.Parsers["TestParser"] = reflect.TypeOf(TestParser{})
+	env = createEnvironment(&iface.Configuration{
+		Debug: true,
+		Settings: []iface.Settings{
+			{
+				UseToken: true,
+				URI:      "save",
+				Saver:    "TestSaver",
+				Parser:   "TestParser",
+				Notifier: "TestNotifier",
+			},
+		},
+	}, env)
+	token := []byte{}
+	req, _ := http.NewRequest("GET", "http://localhost/v1/glutton/save/token", nil)
+	testHTTPResponse(t, env.Server, req, func(w *httptest.ResponseRecorder) bool {
+		assert.Equal(t, http.StatusOK, w.Code)
+		token, _ = ioutil.ReadAll(w.Body)
+		return true
+	})
+	req, _ = http.NewRequest("POST", "http://localhost/v1/glutton/save", nil)
+	req.Header.Add("token", string(token))
+	testHTTPResponse(t, env.Server, req, func(w *httptest.ResponseRecorder) bool {
+		assert.Equal(t, http.StatusOK, w.Code)
+		p, _ := ioutil.ReadAll(w.Body)
+		log.Printf("server reply: %s", string(p))
+		log.Printf("server header: %+v", w.HeaderMap)
 		return true
 	})
 }
