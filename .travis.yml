@@ -11,6 +11,7 @@ sudo: false
 install: true
 
 env:
-  - GOARCH=amd64
-  - GOOS=linux
-  - GO111MODULE=on
+  global:
+    - GOARCH=amd64
+    - GO111MODULE=on
+    - GOOS=linux
