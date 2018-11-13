@@ -1,6 +1,7 @@
 language: c
 
 script: 
+  - pwd
   - go vet
   - go test
   - go build 
