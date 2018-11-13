@@ -1,18 +1,16 @@
-language: c
+language: go
 
-script: 
-  - pwd
-  - go vet
-  - go test
-  - go build 
+go:
+  - "1.11.x"
+
+os:
+  - linux
 
 dist: trusty
 sudo: false
-
-install: 
-  - eval "$(curl -sL https://raw.githubusercontent.com/travis-ci/gimme/master/gimme | GIMME_GO_VERSION=master bash)"
+install: true
 
 env:
-  global:
-    - GOARCH=amd64
-    - GOOS=linux
+  - GOARCH=amd64
+  - GOOS=linux
+  - GO111MODULE=on
