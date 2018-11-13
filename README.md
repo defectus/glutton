@@ -3,6 +3,7 @@
 [![Build Status](https://travis-ci.org/defectus/glutton.svg?branch=master)](https://travis-ci.org/defectus/glutton)
 [![GoDoc](https://godoc.org/github.com/defectus/glutton/pkg?status.svg)](https://godoc.org/github.com/defectus/glutton/pkg)
 [![Coverage status](https://codecov.io/github/defectus/glutton/coverage.svg?branch=master)](https://codecov.io/github/defectus/glutton?branch=master)
+[![Go Report Card](https://goreportcard.com/badge/github.com/defectus/glutton)](https://goreportcard.com/report/github.com/defectus/glutton)
 
 
 
