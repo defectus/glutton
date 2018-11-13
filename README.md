@@ -1,5 +1,7 @@
 # glutton
 
+[![Build Status](https://travis-ci.org/defectus/glutton.svg?branch=master)](https://travis-ci.org/defectus/glutton)
+
 Glutton is a small HTTP server that can be called with *ANY* data and the data is stored.
 
 In this release the only destination for the data is the file system. 
