@@ -2,6 +2,8 @@
 
 [![Build Status](https://travis-ci.org/defectus/glutton.svg?branch=master)](https://travis-ci.org/defectus/glutton)
 [![GoDoc](https://godoc.org/github.com/defectus/glutton/pkg?status.svg)](https://godoc.org/github.com/defectus/glutton/pkg)
+[![Coverage status](https://codecov.io/github/defectus/glutton/coverage.svg?branch=master)](https://codecov.io/github/defectus/glutton?branch=master)
+
 
 
 Glutton is a small HTTP server that can be called with *ANY* data and the data is stored.
