@@ -1,13 +1,15 @@
-language: go
-
-go:
-  - "1.11"
-  - master
+language: c
 
 script: 
   - go vet
   - go test
   - go build 
+
+dist: trusty
+sudo: false
+
+install: 
+  - eval "$(curl -sL https://raw.githubusercontent.com/travis-ci/gimme/master/gimme | GIMME_GO_VERSION=master bash)"
 
 env:
   global:
