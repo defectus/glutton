@@ -34,7 +34,7 @@ build:
 test:
 	go get github.com/tebeka/go2xunit
 	cd ${BUILD_DIR}; \
-	go test -v ./... 2>&1 | ${GOPATH}/bin/go2xunit -output ${TEST_REPORT} ; \
+	go test -race -coverprofile=coverage.txt -covermode=atomic -v ./... 2>&1 | ${GOPATH}/bin/go2xunit -output ${TEST_REPORT} ; \
 	cd - >/dev/null
 
 vet:

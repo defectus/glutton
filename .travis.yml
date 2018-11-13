@@ -15,3 +15,5 @@ env:
     - GOARCH=amd64
     - GO111MODULE=on
     - GOOS=linux
+after_success:
+  - bash <(curl -s https://codecov.io/bash)

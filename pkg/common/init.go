@@ -45,8 +45,8 @@ func CreateConfiguration(configuration *iface.Configuration, debug bool, yamlCon
 	return configuration
 }
 
-// createEnvironment prepares the whole environment - provided with a configuration it creates all structs and handlers.
-func createEnvironment(configuration *iface.Configuration, env *iface.Env) *iface.Env {
+// CreateEnvironment prepares the whole environment - provided with a configuration it creates all structs and handlers.
+func CreateEnvironment(configuration *iface.Configuration, env *iface.Env) *iface.Env {
 	if env == nil {
 		env = &iface.Env{
 			Savers:    map[string]reflect.Type{},
