@@ -28,7 +28,7 @@ run: all
 
 build: 
 	cd ${BUILD_DIR}; \
-	GOOS=${GOOS} GOARCH=${GOARCH} go build ${LDFLAGS} -o ${BINARY}-${GOOS}-${GOARCH} cmd/glutton/main.go ; \
+	GOOS=${GOOS} GOARCH=${GOARCH} CGO_ENABLED=0 go build ${LDFLAGS} -o ${BINARY}-${GOOS}-${GOARCH} cmd/glutton/main.go ; \
 	cd - >/dev/null
 
 test:
