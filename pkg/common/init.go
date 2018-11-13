@@ -6,11 +6,10 @@ import (
 	"os"
 	"reflect"
 	"strconv"
-	"time"
 
 	"gopkg.in/yaml.v2"
 
-	"github.com/defectus/glutton/pkg/auth"
+	"github.com/defectus/glutton/pkg/handler"
 	"github.com/defectus/glutton/pkg/iface"
 	"github.com/defectus/glutton/pkg/notifier"
 	"github.com/defectus/glutton/pkg/parser"
@@ -98,74 +97,14 @@ func createEnvironment(configuration *iface.Configuration, env *iface.Env) *ifac
 				log.Panicf("exptected parser, got %s", reflect.TypeOf(instance))
 			}
 		}
-		handler := createHandler(settings.URI, parser, notifier, saver, settings.Debug)
+		h := handler.CreateHandler(settings.URI, parser, notifier, saver, settings.Debug)
 		if settings.UseToken {
-			handler = validateTokenHandler(handler, settings.URI, []byte(settings.TokenKey), configuration.Debug)
+			h = handler.ValidateTokenHandler(h, settings.URI, []byte(settings.TokenKey), configuration.Debug)
+			gluttonRoute.GET(settings.URI+"/token", handler.CreateTokenHandler(settings.URI, []byte(settings.TokenKey), configuration.Debug))
 		}
-		gluttonRoute.POST(settings.URI, redirectHandler(handler, http.StatusTemporaryRedirect, settings.Redirect))
-		gluttonRoute.GET(settings.URI+"/token", createTokenHandler(settings.URI, []byte(settings.TokenKey), configuration.Debug))
+		gluttonRoute.POST(settings.URI, handler.RedirectHandler(h, http.StatusTemporaryRedirect, settings.Redirect))
 	}
 	return env
-}
-
-func createTokenHandler(uri string, key []byte, debug bool) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		tokenProvider := auth.NewDefaultTokenProvider(5*time.Minute, []byte(key), debug)
-		token, err := tokenProvider.GenerateToken(uri, time.Now())
-		if err != nil {
-			log.Printf("error generating token %+v", err)
-		}
-		c.Writer.Write([]byte(token))
-	}
-}
-
-// redirectHandler wraps the supplied handler into a redirect call. If the location parameters is empty no redirect is performed.
-func redirectHandler(handler gin.HandlerFunc, code int, location string) gin.HandlerFunc {
-	if len(location) == 0 {
-		return handler
-	}
-	return func(c *gin.Context) {
-		handler(c)
-		c.Redirect(code, location)
-	}
-}
-
-// validateTokenHandler wraps target handler into token validation block.
-func validateTokenHandler(handler gin.HandlerFunc, uri string, key []byte, debug bool) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		tokenProvider := auth.NewDefaultTokenProvider(5*time.Minute, key, debug)
-		valid, err := tokenProvider.ValidateToken(c.GetHeader("token"), uri, time.Now())
-		if err != nil {
-			log.Printf("a valid token required but validation failed with %+v", err)
-		}
-		if !valid {
-			c.Status(http.StatusPreconditionFailed)
-			return
-		}
-		handler(c)
-	}
-}
-
-// createHandler appends a route to router and initialize the basic flow (request -> parser -> notifier -> saver)
-func createHandler(URI string, parser iface.PayloadParser, notifier iface.PayloadNotifier, saver iface.PayloadSaver, debug bool) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		payload, err := parser.Parse(c.Request)
-		if err != nil {
-			log.Printf("%s: error parsing contents %+v", URI, err)
-			log.Printf("%+v", c.Request)
-		}
-		err = notifier.Notify(payload)
-		if err != nil {
-			log.Printf("%s: error notifying of payload %+v", URI, err)
-			log.Printf("%+v", payload)
-		}
-		err = saver.Save(payload)
-		if err != nil {
-			log.Printf("%s: error saving payload %+v", URI, err)
-			log.Printf("%+v", payload)
-		}
-		c.Status(http.StatusOK)
-	}
 }
 
 func registerCompoments(env *iface.Env) {
