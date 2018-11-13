@@ -4,7 +4,10 @@ go:
   - "1.11"
   - master
 
-script: make
+script: 
+  - go vet
+  - go test
+  - go build 
 
 env:
   global:
