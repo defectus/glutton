@@ -111,6 +111,7 @@ func registerCompoments(env *iface.Env) {
 	env.Notifiers["NilNotifier"] = reflect.TypeOf(notifier.NilNotifier{})
 	env.Notifiers["SMTPNotifier"] = reflect.TypeOf(notifier.SMTPNotifier{})
 	env.Savers["SimpleFileSystemSaver"] = reflect.TypeOf(saver.SimpleFileSystemSaver{})
+	env.Savers["DatabaseSaver"] = reflect.TypeOf(saver.DatabaseSaver{})
 	env.Parsers["SimpleParser"] = reflect.TypeOf(parser.SimpleParser{})
 }
 

@@ -38,7 +38,7 @@ settings:
     uri: save
     parser: SimpleParser # choice of `SimpleParser`
     notifier: NilNotifier # choice of `NilNotifier`, `SMTPNotifier`
-    saver: SimpleFileSystemSaver # choice of `SimpleFileSystemSaver`
+    saver: SimpleFileSystemSaver # choice of `SimpleFileSystemSaver`, `DatabaseSaver`
     # SimpleFileSystemSaver settings
     output_folder: glutton # lcoation to which request are saved
     base_name: glutton_%d # name of request files (supports single numeric counter variable)
@@ -50,6 +50,9 @@ settings:
     smtp_to: target@email.address
     token_key: 01234567890 # a key to use to encrypt access tokens, if enabled
     use_token: false 
+    sql_driver: postgres # if configured to use the `DatabaseSaver`
+    sql_layout: "INSERT INTO payload(ts, remote, meta, payload) VALUES ($1, $2, $3, $4)" # $1 is the timestamp, $2 is the remote host, $3 is meta data map and $4 is the payload
+    sql_connection_string: "postgres://root:root@localhost/postgres?sslmode=disable"
 ```
 
 As you can see, the settings is fairly straight forward. When using the environment keys are:
@@ -67,6 +70,12 @@ SimpleFileSystemSaver settings
 
 * `OUTPUT_FOLDER`
 * `BASE_NAME`
+
+DatabaseSaver settings
+
+* `SQL_DRIVER`
+* `SQL_LAYOUT`
+* `SQL_CONNECTION_STRING`
 
 SMTPNotifier settings
 
@@ -95,7 +104,7 @@ Requests are stored on a path defined by the `OUTPUT_FOLDER` variable. If ommite
 
 In the future releases you hopefully find the following features
 
-❌ saving to database
+✔️️️ saving to database
 
 ✔️ redirect on save 
 

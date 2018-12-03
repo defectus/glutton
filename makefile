@@ -5,7 +5,7 @@ GOARCH ?= amd64
 GOOS ?= linux
 
 
-VERSION?=1.3.0
+VERSION?=1.4.0
 COMMIT=$(shell git rev-parse HEAD)
 BRANCH=$(shell git rev-parse --abbrev-ref HEAD)
 TAG=$(shell git describe --tags --abbrev=0)
