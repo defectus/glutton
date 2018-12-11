@@ -48,6 +48,7 @@ settings:
     smtp_use_tls: true
     smtp_from: your@email.address
     smtp_to: target@email.address
+    smtp_password: 
     token_key: 01234567890 # a key to use to encrypt access tokens, if enabled
     use_token: false 
     sql_driver: postgres # if configured to use the `DatabaseSaver`
@@ -84,6 +85,7 @@ SMTPNotifier settings
 * `SMTP_USE_TLS`
 * `SMTP_FROM`
 * `SMTP_TO`
+* `SMTP_PASSWORD`
 
 Token settings
 

@@ -24,7 +24,7 @@ func CreateConfiguration(configuration *iface.Configuration, debug bool, yamlCon
 		configuration = new(iface.Configuration)
 	}
 	valueFromEnvVar(configuration)
-	configuration.Debug = debug
+	configuration.Debug = configuration.Debug || debug 
 	if len(yamlConfiguration) > 0 {
 		if err := yaml.Unmarshal(yamlConfiguration, configuration); err != nil {
 			log.Printf("createConfigration: error parsing configuration %+v", err)
@@ -163,11 +163,11 @@ func valueFromEnvVar(value interface{}) error {
 			if val.Type().Field(i).Type.Elem().Kind() == reflect.Struct {
 				err := valueFromEnvVar(val.Field(i).Interface())
 				if err != nil {
-					return errors.Wrapf(err, "error processing %s", val.Field(i).Type().Name())
+					return errors.Wrapf(err, "error processing %s", val.Type().Field(i).Name)
 				}
 			}
 		default:
-			log.Printf("valueFromEnvVar: unsupported kind %s.", val.Type().Field(i).Type.Kind())
+			log.Printf("valueFromEnvVar: unsupported kind %s at %s.", val.Type().Field(i).Type.Kind(), val.Type().Field(i).Name)
 		}
 	}
 	return nil
