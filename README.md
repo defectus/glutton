@@ -9,14 +9,13 @@
 
 Glutton is a small HTTP server that can be called with *ANY* data and the data is stored.
 
-In this release the only destination for the data is the file system. 
-
 ## How to run glutton
 
 * from source
    * run `make run` - this will spin up glutton on local port 4354
 * docker
    * run `docker --rm -it -p 4354:4354 -v glutton:glutton defectus/glutton` - this will spin up glutton on local port 4354
+   * more meaningful command would look like `run -d --name glutton --restart=always --log-driver=syslog --log-opt tag=glutton --env-file /etc/glutton/glutton.env -v /var/glutton/:/out/ -p 8888:8080 defectus/glutton:latest`. 
 
 ## Configuration
 
@@ -40,15 +39,15 @@ settings:
     notifier: NilNotifier # choice of `NilNotifier`, `SMTPNotifier`
     saver: SimpleFileSystemSaver # choice of `SimpleFileSystemSaver`, `DatabaseSaver`
     # SimpleFileSystemSaver settings
-    output_folder: glutton # lcoation to which request are saved
+    output_folder: glutton # location to which request are saved
     base_name: glutton_%d # name of request files (supports single numeric counter variable)
     # SMTPNotifier settings
     smtp_server: smtp.gmail.com
-    smtp_port: 25
-    smtp_use_tls: true
+    smtp_port: 25 # for gmail use 587
+    smtp_use_tls: true # gmail requires TLS
     smtp_from: your@email.address
     smtp_to: target@email.address
-    smtp_password: 
+    smtp_password:  # for gmail, configure your account to allow unsecured connection
     token_key: 01234567890 # a key to use to encrypt access tokens, if enabled
     use_token: false 
     sql_driver: postgres # if configured to use the `DatabaseSaver`
