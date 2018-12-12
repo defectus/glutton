@@ -1,0 +1,11 @@
+#!/bin/bash
+mkdir -p /var/glutton
+chmod a+w /var/glutton
+docker pull defectus/glutton:latest
+docker run -d --name glutton\
+       --restart=always\
+       --log-driver=syslog --log-opt tag=glutton\
+       --env-file /etc/glutton/glutton.env\
+       -v /var/glutton/:/out/\
+       -p 8888:8080 \
+       defectus/glutton:latest
