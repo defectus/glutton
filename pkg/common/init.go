@@ -7,7 +7,7 @@ import (
 	"reflect"
 	"strconv"
 
-	"gopkg.in/yaml.v2"
+	yaml "gopkg.in/yaml.v2"
 
 	"github.com/defectus/glutton/pkg/handler"
 	"github.com/defectus/glutton/pkg/iface"
@@ -24,7 +24,7 @@ func CreateConfiguration(configuration *iface.Configuration, debug bool, yamlCon
 		configuration = new(iface.Configuration)
 	}
 	valueFromEnvVar(configuration)
-	configuration.Debug = configuration.Debug || debug 
+	configuration.Debug = configuration.Debug || debug
 	if len(yamlConfiguration) > 0 {
 		if err := yaml.Unmarshal(yamlConfiguration, configuration); err != nil {
 			log.Printf("createConfigration: error parsing configuration %+v", err)

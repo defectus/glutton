@@ -105,7 +105,7 @@ func (m *MockConfigurable) Configure(*iface.Settings) error {
 }
 
 func TestCreateInstanceOf(t *testing.T) {
-	mc := MockConfigurable{}
+	mc := &MockConfigurable{}
 	types := map[string]reflect.Type{"dummy": reflect.TypeOf(mc)}
 	instance, err := createInstanceOf(types, "dummy", nil)
 	assert.NoError(t, err)

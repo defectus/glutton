@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/pkg/errors"
 	"github.com/defectus/glutton/pkg/iface"
+	"github.com/pkg/errors"
 )
 
 // SimpleParser is the default implementation if the parser interface.

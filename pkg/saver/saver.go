@@ -7,8 +7,8 @@ import (
 	"path/filepath"
 	"sync/atomic"
 
-	"github.com/pkg/errors"
 	"github.com/defectus/glutton/pkg/iface"
+	"github.com/pkg/errors"
 )
 
 // SimpleFileSystemSaver saves request to filesystem.

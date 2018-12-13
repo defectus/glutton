@@ -8,9 +8,9 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/defectus/glutton/pkg/iface"
 	"github.com/defectus/glutton/pkg/common"
 	"github.com/defectus/glutton/pkg/handler"
+	"github.com/defectus/glutton/pkg/iface"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"

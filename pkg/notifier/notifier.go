@@ -6,8 +6,8 @@ import (
 	"log"
 	"net/smtp"
 
-	"github.com/pkg/errors"
 	"github.com/defectus/glutton/pkg/iface"
+	"github.com/pkg/errors"
 )
 
 // NilNotifier implements the glutton.PayloadNotifier interface but does nothing.
