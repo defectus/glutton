@@ -102,7 +102,7 @@ func CreateEnvironment(configuration *iface.Configuration, env *iface.Env) *ifac
 			h = handler.ValidateTokenHandler(h, settings.URI, []byte(settings.TokenKey), configuration.Debug)
 			gluttonRoute.GET(settings.URI+"/token", handler.CreateTokenHandler(settings.URI, []byte(settings.TokenKey), configuration.Debug))
 		}
-		gluttonRoute.POST(settings.URI, handler.RedirectHandler(h, http.StatusTemporaryRedirect, settings.Redirect))
+		gluttonRoute.POST(settings.URI, handler.RedirectHandler(h, http.StatusFound, settings.Redirect))
 	}
 	return env
 }
